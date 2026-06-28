@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /editor/
+
+Sitemap: https://collabdocs.vercel.app/sitemap.xml
