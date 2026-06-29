@@ -66,35 +66,12 @@ async function streamAiResponse(
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-    // AI SDK v7 sends text stream chunks directly
     const chunk = decoder.decode(value, { stream: true });
-    // Parse SSE data lines
-    const lines = chunk.split("\n");
-    for (const line of lines) {
-      if (line.startsWith("0:")) {
-        // Vercel AI SDK text chunk format: 0:"chunk text"
-        try {
-          const text = JSON.parse(line.slice(2)) as string;
-          full += text;
-          onChunk(text);
-        } catch {
-          // Not a JSON chunk — might be raw text
-          const text = line.slice(2);
-          if (text) { full += text; onChunk(text); }
-        }
-      } else if (line.startsWith("data: ")) {
-        // Plain SSE format
-        const data = line.slice(6);
-        if (data && data !== "[DONE]") {
-          try {
-            const parsed = JSON.parse(data) as { choices?: { delta?: { content?: string } }[] };
-            const text = parsed.choices?.[0]?.delta?.content ?? "";
-            if (text) { full += text; onChunk(text); }
-          } catch { /* ignore */ }
-        }
-      }
-    }
+    // toTextStreamResponse sends plain text chunks directly
+    full += chunk;
+    onChunk(chunk);
   }
+
   return full;
 }
 
